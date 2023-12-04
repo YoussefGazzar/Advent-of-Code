@@ -21,10 +21,8 @@ end
 result = data.each_with_object(Hash.new { |h, k| h[k] = 1 }) do |line, cards|
 	card, sets = line.split(': ')
 	card = card.split.last.to_i
-	size = sets.split(' | ').map { |set| set.split }.inject(:&).size
-	cards[card].times do
-		size.times { cards[card + 1 + _1] += 1 }
-	end
+	size = sets.split(' | ').map(&:split).inject(:&).size
+	cards[card].times { size.times { cards[card + 1 + _1] += 1 } }
 end
 
 p result.values.sum
