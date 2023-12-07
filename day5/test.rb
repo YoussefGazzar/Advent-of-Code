@@ -1,23 +1,4 @@
 require 'byebug'
-if ARGV.empty?
-	data =  DATA.readlines(chomp: true)
-else
-	data = File.readlines(ARGV.first, chomp: true)
-end
-
-result = data.chunk_while {!_1.empty?}.to_a.map {_1.reject(&:empty?)}
-seeds, *rest = result
-seeds = seeds.flat_map {_1.scan(/\d+/)}.map(&:to_i).each_slice(2).to_a.map {|a, b| (a...a+b)}
-
-mappings = rest.map do |line|
-	_, *values = line 
-	values = values.each_with_object({}) do |value, hash|
-		distnation, source, range = value.split.map(&:to_i)
-		key = (source...source+range)
-		hash[key] = distnation
-	end
-	values
-end
 
 def range_contains(r1, r2)
   # not contained
@@ -40,17 +21,37 @@ def move_range(r, num)
   r.min+num..r.max+num
 end
 
+seeds = [79...93,
+        #  55...68
+        ]
+
+mappings = [{98...100=>50, 50...98=>52},
+            {15...52=>0, 52...54=>37, 0...15=>39},
+            {53...61=>49, 11...53=>0, 0...7=>42, 7...11=>57},
+            {18...25=>88, 25...95=>18},
+            {77...100=>45, 45...64=>81, 64...77=>68},
+            {69...70=>0, 0...69=>1},
+            {56...93=>60, 93...97=>56}
+          ]
+
 seeds = seeds.map do |seed_range|
   temp_seed_range = [seed_range]
+  pp temp_seed_range
   mappings.each do |mapping|
     new_seeds = []
     remainig_seeds = []
+    pp mapping
     mapping.each do |map_range, destination|
       offset = destination - map_range.min
       current_seeds = remainig_seeds.empty? ? temp_seed_range : remainig_seeds
+      pp "Current Seeds: #{current_seeds}"
       temp_rest = []
       current_seeds.each do |current_range|
         exist, rest = range_contains(current_range, map_range)
+        pp "Map Range: #{map_range}"
+        pp "Current Range: #{current_range}"
+        pp "Exist: #{exist}"
+        pp "Rest: #{rest}"
         if !exist.empty?
           exist = exist.first
           new_seeds += [move_range(exist, offset)]
@@ -61,43 +62,10 @@ seeds = seeds.map do |seed_range|
       remainig_seeds = temp_rest
     end
     temp_seed_range = new_seeds + remainig_seeds
+    pp temp_seed_range
   end
+  # pp temp_seed_range
   temp_seed_range.map(&:min).min
 end
-
+# pp seeds
 pp seeds.min
-
-__END__
-seeds: 79 14 55 13
-
-seed-to-soil map:
-50 98 2
-52 50 48
-
-soil-to-fertilizer map:
-0 15 37
-37 52 2
-39 0 15
-
-fertilizer-to-water map:
-49 53 8
-0 11 42
-42 0 7
-57 7 4
-
-water-to-light map:
-88 18 7
-18 25 70
-
-light-to-temperature map:
-45 77 23
-81 45 19
-68 64 13
-
-temperature-to-humidity map:
-0 69 1
-1 0 69
-
-humidity-to-location map:
-60 56 37
-56 93 4
