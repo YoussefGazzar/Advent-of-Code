@@ -9,7 +9,7 @@ CARD_SCORE = {
   'A' => 14,
   'K' => 13,
   'Q' => 12,
-  'J' => 11,
+  'J' => 1,
   'T' => 10,
   '9' => 9,
   '8' => 8,
@@ -19,16 +19,6 @@ CARD_SCORE = {
   '4' => 4,
   '3' => 3,
   '2' => 2,
-}
-
-TYPE_SCORE = {
-  'Five' => 5,
-  'Four' => 4,
-  'Full' => 3,
-  'Three' => 2,
-  'Two' => 1,
-  'One' => 0,
-  'High' => -1,
 }
 
 TYPES = {
@@ -41,19 +31,34 @@ TYPES = {
   'High' => [],
 }
 
-def categorize_hands!(hands)
-  hands.keys.each do |cards|
-    case cards.chars.tally.values.sort.reverse
-    when [5] then TYPES['Five'] << cards
-    when [4, 1] then TYPES['Four'] << cards
-    when [3, 2] then TYPES['Full'] << cards
-    when [3, 1, 1] then TYPES['Three'] << cards
-    when [2, 2, 1] then TYPES['Two'] << cards
-    when [2, 1, 1, 1] then TYPES['One'] << cards
-    else TYPES['High'] << cards
-    end 
-  end
+def hand_type(hand)
+  case hand.chars.tally.values.sort.reverse
+  when [5] then return 'Five'
+  when [4, 1] then return 'Four'
+  when [3, 2] then return 'Full'
+  when [3, 1, 1] then return 'Three'
+  when [2, 2, 1] then return 'Two'
+  when [2, 1, 1, 1] then return 'One'
+  else return 'High'
+  end 
+end
   
+def adjust_for_jokers!
+  TYPES.each do |type, hands|
+    next if hands.empty?
+    to_be_deleted = []
+    hands.each_with_index do |hand, i|
+      count = hand.chars.count {_1 == 'J'}
+      if count.between?(1, 4)
+        char = hand.gsub('J', '').chars.tally.sort_by { |k, v| v }.last[0]
+        new_hand = hand.gsub('J', char)
+        new_type = hand_type(new_hand)
+        to_be_deleted << i
+        TYPES[new_type] << hand
+      end
+    end
+    to_be_deleted.reverse.each {hands.delete_at(_1)}
+  end
 end
 
 def rank_hands(hands)
@@ -71,7 +76,12 @@ def rank_hands(hands)
 end
 
 hands = data.map(&:split).map {[_1, _2.to_i]}.to_h
-categorize_hands!(hands)
+hands.each do |hand, _|
+  type = hand_type(hand)
+  TYPES[type] << hand
+end
+# pp TYPES
+adjust_for_jokers!
 rankings = rank_hands(hands)
 result = rankings.map { |hand, rank| hands[hand] * rank }.sum
 
