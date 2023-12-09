@@ -44,11 +44,11 @@ def hand_type(hand)
 end
   
 def adjust_for_jokers!
-  TYPES.each do |type, hands|
+  TYPES.values.each do |hands|
     next if hands.empty?
     to_be_deleted = []
     hands.each_with_index do |hand, i|
-      count = hand.chars.count {_1 == 'J'}
+      count = hand.chars.count { _1 == 'J' }
       if count.between?(1, 4)
         char = hand.gsub('J', '').chars.tally.sort_by { |k, v| v }.last[0]
         new_hand = hand.gsub('J', char)
@@ -57,7 +57,7 @@ def adjust_for_jokers!
         TYPES[new_type] << hand
       end
     end
-    to_be_deleted.reverse.each {hands.delete_at(_1)}
+    to_be_deleted.reverse.each { hands.delete_at(_1) }
   end
 end
 
