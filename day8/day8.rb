@@ -36,7 +36,7 @@ cycles = current_nodes.each_with_object([]) do |node, arr|
 end
 
 pp cycles
-pp cycles.reduce(1, :lcm)
+pp cycles.inject(:lcm)
 
 # "Node: DDZ, I: 20093"
 # "Node: XDZ, I: 12169"
