@@ -1,5 +1,6 @@
 require 'dotenv/load'
 require 'open-uri'
+require 'byebug'
 
 class InputFetcher
   def self.fetch(year, day, bulk = false)
